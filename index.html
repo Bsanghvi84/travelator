@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Travelator - AR Location History</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <div class="header-content">
+                <h1>🌍 Travelator</h1>
+                <p class="tagline">Discover history around you</p>
+            </div>
+            <div class="location-info">
+                <span id="location-display">📍 Getting location...</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content">
+            <!-- Welcome Screen -->
+            <div id="welcome-screen" class="screen active">
+                <div class="welcome-content">
+                    <div class="logo-large">🗺️</div>
+                    <h2>Welcome to Travelator</h2>
+                    <p>Point your camera at landmarks and discover their fascinating history</p>
+                    <button id="start-btn" class="btn-primary">
+                        <span class="btn-icon">📸</span>
+                        Start Exploring
+                    </button>
+                    <div class="features">
+                        <div class="feature">
+                            <span class="feature-icon">📍</span>
+                            <p>Location-based POI detection</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">📷</span>
+                            <p>AR camera view</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">📚</span>
+                            <p>Historical information</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AR Camera Screen -->
+            <div id="ar-screen" class="screen">
+                <video id="camera-feed" autoplay playsinline></video>
+                <canvas id="ar-canvas"></canvas>
+
+                <!-- AR Overlays -->
+                <div id="ar-overlays"></div>
+
+                <!-- Compass -->
+                <div id="compass">
+                    <div class="compass-circle">
+                        <div class="compass-needle" id="compass-needle"></div>
+                        <div class="compass-directions">
+                            <span class="dir-n">N</span>
+                            <span class="dir-e">E</span>
+                            <span class="dir-s">S</span>
+                            <span class="dir-w">W</span>
+                        </div>
+                    </div>
+                    <div class="compass-heading" id="compass-heading">0°</div>
+                </div>
+
+                <!-- Controls -->
+                <div class="ar-controls">
+                    <button id="close-ar-btn" class="btn-secondary">
+                        <span>✕</span> Exit AR
+                    </button>
+                    <button id="toggle-pois-btn" class="btn-secondary">
+                        <span>👁️</span> Toggle POIs
+                    </button>
+                </div>
+
+                <!-- POI List (Bottom Sheet) -->
+                <div id="poi-sheet" class="bottom-sheet">
+                    <div class="sheet-handle"></div>
+                    <h3>Nearby Places (<span id="poi-count">0</span>)</h3>
+                    <div id="poi-list" class="poi-list"></div>
+                </div>
+            </div>
+
+            <!-- Location Detail Modal -->
+            <div id="detail-modal" class="modal">
+                <div class="modal-content">
+                    <button class="modal-close" id="close-modal-btn">✕</button>
+                    <div id="detail-content">
+                        <img id="detail-image" src="" alt="">
+                        <h2 id="detail-name"></h2>
+                        <div class="detail-meta">
+                            <span id="detail-distance"></span>
+                            <span id="detail-type"></span>
+                        </div>
+                        <div id="detail-description"></div>
+                        <div id="detail-history"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="spinner"></div>
+            <p id="loading-text">Loading...</p>
+        </div>
+
+        <!-- Error Toast -->
+        <div id="error-toast" class="toast"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
