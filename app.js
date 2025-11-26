@@ -591,10 +591,10 @@ class Travelator {
             zoomControl: true
         }).setView([defaultLat, defaultLon], 13);
 
-        // Add tile layer (OpenStreetMap)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19
+        // Add tile layer (Google Maps)
+        L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            attribution: '© Google Maps',
+            maxZoom: 20
         }).addTo(this.map);
 
         // Add user location marker
