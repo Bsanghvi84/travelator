@@ -47,140 +47,8 @@ class Travelator {
             recenterBtn: document.getElementById('recenter-btn')
         };
 
-        // Historical POI database (expandable with real API)
-        this.poiDatabase = [
-            {
-                id: 1,
-                name: "Eiffel Tower",
-                type: "Monument",
-                lat: 48.8584,
-                lon: 2.2945,
-                description: "Iconic iron lattice tower on the Champ de Mars",
-                history: "Built in 1889 for the World's Fair, the Eiffel Tower was designed by Gustave Eiffel. Initially criticized by Paris's leading artists and intellectuals, it has become a global cultural icon of France and one of the most recognizable structures in the world. Standing at 330 meters tall, it was the world's tallest man-made structure until 1930.",
-                image: "https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=800&q=80"
-            },
-            {
-                id: 2,
-                name: "Statue of Liberty",
-                type: "Monument",
-                lat: 40.6892,
-                lon: -74.0445,
-                description: "Colossal neoclassical sculpture on Liberty Island",
-                history: "A gift from France to the United States, the Statue of Liberty was dedicated on October 28, 1886. Designed by French sculptor Frédéric Auguste Bartholdi, the statue's metal framework was built by Gustave Eiffel. Lady Liberty has welcomed millions of immigrants arriving by sea and has become a universal symbol of freedom and democracy.",
-                image: "https://images.unsplash.com/photo-1569098644584-210bcd375b59?w=800&q=80"
-            },
-            {
-                id: 3,
-                name: "Colosseum",
-                type: "Historical Site",
-                lat: 41.8902,
-                lon: 12.4922,
-                description: "Ancient amphitheater in the center of Rome",
-                history: "Built between 70-80 AD under the Flavian emperors, the Colosseum is the largest ancient amphitheater ever built. It could hold between 50,000 and 80,000 spectators and was used for gladiatorial contests, public spectacles, and dramas. Despite earthquakes and stone-robbers, it remains an iconic symbol of Imperial Rome and was listed as a UNESCO World Heritage Site in 1980.",
-                image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&q=80"
-            },
-            {
-                id: 4,
-                name: "Big Ben",
-                type: "Monument",
-                lat: 51.5007,
-                lon: -0.1246,
-                description: "Clock tower at the Palace of Westminster",
-                history: "Completed in 1859, the Elizabeth Tower (commonly called Big Ben after its Great Bell) is one of London's most famous landmarks. The clock mechanism was designed by Edmund Beckett Denison and clockmaker Edward John Dent. The tower stands 316 feet tall and has become an enduring symbol of the United Kingdom and parliamentary democracy.",
-                image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&q=80"
-            },
-            {
-                id: 5,
-                name: "Taj Mahal",
-                type: "Monument",
-                lat: 27.1751,
-                lon: 78.0421,
-                description: "Ivory-white marble mausoleum in Agra",
-                history: "Built between 1631 and 1648 by Mughal Emperor Shah Jahan in memory of his wife Mumtaz Mahal, the Taj Mahal is considered the finest example of Mughal architecture. It combines elements from Islamic, Persian, Ottoman Turkish, and Indian architectural styles. The monument attracts millions of visitors annually and was designated a UNESCO World Heritage Site in 1983.",
-                image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800&q=80"
-            },
-            {
-                id: 6,
-                name: "Great Wall of China",
-                type: "Historical Site",
-                lat: 40.4319,
-                lon: 116.5704,
-                description: "Ancient fortification across northern China",
-                history: "Built over centuries from the 7th century BC to the 17th century AD, the Great Wall stretches over 13,000 miles. Originally built to protect Chinese states from nomadic invasions, it represents one of the most impressive architectural feats in history. The most well-preserved sections were built during the Ming Dynasty (1368-1644).",
-                image: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800&q=80"
-            },
-            {
-                id: 7,
-                name: "Sydney Opera House",
-                type: "Cultural Site",
-                lat: -33.8568,
-                lon: 151.2153,
-                description: "Multi-venue performing arts center",
-                history: "Designed by Danish architect Jørn Utzon and opened in 1973, the Sydney Opera House is one of the 20th century's most distinctive buildings. Its unique shell-shaped roof structure was revolutionary in architectural design. The building hosts over 1,500 performances annually and was made a UNESCO World Heritage Site in 2007.",
-                image: "https://images.unsplash.com/photo-1523059623039-a9ed027e7fad?w=800&q=80"
-            },
-            {
-                id: 8,
-                name: "Christ the Redeemer",
-                type: "Monument",
-                lat: -22.9519,
-                lon: -43.2105,
-                description: "Art Deco statue of Jesus Christ in Rio de Janeiro",
-                history: "Completed in 1931, this 98-foot-tall statue sits atop the 2,300-foot Corcovado mountain. Designed by French sculptor Paul Landowski and built by Brazilian engineer Heitor da Silva Costa, it has become an icon of Rio de Janeiro and Brazil. The statue is made of reinforced concrete and soapstone and was named one of the New Seven Wonders of the World in 2007.",
-                image: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=800&q=80"
-            },
-            {
-                id: 9,
-                name: "Pyramids of Giza",
-                type: "Historical Site",
-                lat: 29.9792,
-                lon: 31.1342,
-                description: "Ancient pyramid complex including the Great Pyramid",
-                history: "Built during the Fourth Dynasty (c. 2580-2560 BC), the Great Pyramid was constructed for Pharaoh Khufu. It remained the tallest man-made structure for over 3,800 years. The complex includes the pyramids of Khafre and Menkaure, along with the Great Sphinx. These monuments showcase the incredible engineering capabilities of ancient Egyptian civilization.",
-                image: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=800&q=80"
-            },
-            {
-                id: 10,
-                name: "Machu Picchu",
-                type: "Historical Site",
-                lat: -13.1631,
-                lon: -72.5450,
-                description: "15th-century Inca citadel in the Andes Mountains",
-                history: "Built around 1450 at the height of the Inca Empire, Machu Picchu was abandoned just over 100 years later during the Spanish Conquest. The site remained unknown to the outside world until American historian Hiram Bingham brought it to international attention in 1911. Its sophisticated dry-stone construction and astronomical alignments demonstrate advanced Incan engineering and astronomical knowledge.",
-                image: "https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=800&q=80"
-            },
-            // Add some generic local POIs that will be repositioned based on user location
-            {
-                id: 100,
-                name: "Historic City Center",
-                type: "Historical District",
-                lat: 0, // Will be set dynamically
-                lon: 0,
-                description: "The heart of the city with centuries of history",
-                history: "This area has been the center of community life for generations, featuring architecture from various historical periods and hosting countless significant events that shaped the local culture.",
-                image: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80"
-            },
-            {
-                id: 101,
-                name: "Old Town Square",
-                type: "Public Space",
-                lat: 0,
-                lon: 0,
-                description: "Historic gathering place",
-                history: "For centuries, this square has served as a meeting point for the community, witnessing markets, celebrations, and important civic gatherings throughout its long history.",
-                image: "https://images.unsplash.com/photo-1519566236145-e5ac0c1c6745?w=800&q=80"
-            },
-            {
-                id: 102,
-                name: "Heritage Museum",
-                type: "Museum",
-                lat: 0,
-                lon: 0,
-                description: "Cultural heritage exhibition center",
-                history: "Established to preserve and showcase the rich cultural heritage of the region, this museum houses artifacts and exhibits that tell the story of local history and traditions.",
-                image: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=800&q=80"
-            }
-        ];
+        // No hardcoded POIs - we fetch real places from Google Places API
+        this.poiDatabase = [];
 
         this.init();
     }
@@ -312,14 +180,11 @@ class Travelator {
         this.showLoading('Finding nearby places...');
 
         try {
-            // Fetch real nearby places from Overpass API
+            // Fetch real nearby places from Google Places API
             const realPlaces = await this.fetchNearbyPlaces();
 
-            // Combine famous landmarks with real nearby places
-            const allPOIs = [...this.poiDatabase.filter(poi => poi.id < 100), ...realPlaces];
-
-            // Calculate distances and filter POIs within reasonable range
-            this.nearbyPOIs = allPOIs.map(poi => {
+            // Use only real places from Google Places API
+            this.nearbyPOIs = realPlaces.map(poi => {
                 const distance = this.calculateDistance(
                     this.userLocation.lat,
                     this.userLocation.lon,
@@ -380,69 +245,57 @@ class Travelator {
     }
 
     async fetchNearbyPlaces() {
-        const radius = 5000; // 5km radius
-        const lat = this.userLocation.lat;
-        const lon = this.userLocation.lon;
+        return new Promise((resolve, reject) => {
+            // Create a temporary div for PlacesService
+            const tempDiv = document.createElement('div');
+            const service = new google.maps.places.PlacesService(tempDiv);
 
-        // Overpass API query for various POI types
-        const query = `
-            [out:json][timeout:25];
-            (
-                node["tourism"~"attraction|museum|monument|viewpoint|artwork"](around:${radius},${lat},${lon});
-                node["historic"~"monument|memorial|castle|ruins|archaeological_site"](around:${radius},${lat},${lon});
-                node["amenity"~"theatre|cinema|library|community_centre|place_of_worship"](around:${radius},${lat},${lon});
-                way["tourism"~"attraction|museum|monument|viewpoint|artwork"](around:${radius},${lat},${lon});
-                way["historic"~"monument|memorial|castle|ruins|archaeological_site"](around:${radius},${lat},${lon});
-                way["amenity"~"theatre|cinema|library|community_centre|place_of_worship"](around:${radius},${lat},${lon});
-            );
-            out center 100;
-        `;
-
-        const url = 'https://overpass-api.de/api/interpreter';
-
-        const response = await fetch(url, {
-            method: 'POST',
-            body: query,
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch places');
-        }
-
-        const data = await response.json();
-
-        // Convert Overpass data to our POI format
-        return data.elements.map((element, index) => {
-            const poiLat = element.lat || element.center?.lat;
-            const poiLon = element.lon || element.center?.lon;
-
-            if (!poiLat || !poiLon) return null;
-
-            const tags = element.tags || {};
-            const name = tags.name || tags['name:en'] || 'Unnamed Place';
-
-            // Determine type
-            let type = 'Point of Interest';
-            if (tags.tourism) type = this.formatType(tags.tourism);
-            else if (tags.historic) type = this.formatType(tags.historic);
-            else if (tags.amenity) type = this.formatType(tags.amenity);
-
-            return {
-                id: 1000 + index,
-                name: name,
-                type: type,
-                lat: poiLat,
-                lon: poiLon,
-                description: tags.description || `A ${type.toLowerCase()} in your area`,
-                history: tags['description:history'] || tags.wikipedia ||
-                        `${name} is a local ${type.toLowerCase()}. Visit to learn more about its history and significance.`,
-                image: tags.image || tags['image:url'] || 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80',
-                source: 'openstreetmap'
+            const request = {
+                location: new google.maps.LatLng(this.userLocation.lat, this.userLocation.lon),
+                radius: 5000, // 5km radius
+                type: ['tourist_attraction', 'museum', 'church', 'synagogue', 'mosque', 'hindu_temple',
+                       'park', 'art_gallery', 'library', 'landmark', 'point_of_interest']
             };
-        }).filter(poi => poi !== null);
+
+            service.nearbySearch(request, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    // Convert Google Places data to our POI format
+                    const pois = results.map((place, index) => {
+                        const photos = place.photos && place.photos.length > 0
+                            ? place.photos[0].getUrl({ maxWidth: 800 })
+                            : 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80';
+
+                        const types = place.types || [];
+                        let type = 'Point of Interest';
+                        if (types.includes('tourist_attraction')) type = 'Tourist Attraction';
+                        else if (types.includes('museum')) type = 'Museum';
+                        else if (types.includes('church') || types.includes('place_of_worship')) type = 'Place of Worship';
+                        else if (types.includes('park')) type = 'Park';
+                        else if (types.includes('art_gallery')) type = 'Art Gallery';
+                        else if (types.includes('library')) type = 'Library';
+                        else if (types.includes('landmark')) type = 'Landmark';
+
+                        return {
+                            id: 1000 + index,
+                            name: place.name,
+                            type: type,
+                            lat: place.geometry.location.lat(),
+                            lon: place.geometry.location.lng(),
+                            description: place.vicinity || place.formatted_address || `A ${type.toLowerCase()} in your area`,
+                            history: `${place.name} is a notable ${type.toLowerCase()} in the area. ${place.rating ? `Rated ${place.rating}/5 by visitors.` : ''} Visit to explore and learn more.`,
+                            image: photos,
+                            rating: place.rating || null,
+                            userRatingsTotal: place.user_ratings_total || null,
+                            source: 'google_places'
+                        };
+                    });
+
+                    resolve(pois);
+                } else {
+                    reject(new Error(`Places API error: ${status}`));
+                }
+            });
+        });
     }
 
     formatType(type) {
