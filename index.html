@@ -170,6 +170,30 @@
 
         <!-- Error Toast -->
         <div id="error-toast" class="toast"></div>
+
+        <!-- API Key Setup Modal -->
+        <div id="api-key-modal" class="modal">
+            <div class="modal-content api-key-setup">
+                <h2>🗺️ Setup Google Places API</h2>
+                <p>To show real nearby places, please add your Google Places API key:</p>
+                <div class="api-key-input-group">
+                    <input type="text" id="api-key-input" placeholder="Enter your Google Places API key" />
+                    <button id="save-api-key-btn" class="btn-primary">Save</button>
+                </div>
+                <div class="api-key-help">
+                    <p><strong>How to get an API key:</strong></p>
+                    <ol>
+                        <li>Go to <a href="https://console.cloud.google.com/google/maps-apis" target="_blank">Google Cloud Console</a></li>
+                        <li>Create a new project or select existing</li>
+                        <li>Enable "Places API"</li>
+                        <li>Create credentials (API Key)</li>
+                        <li>Paste your key above</li>
+                    </ol>
+                    <p><em>Note: Google provides $200 free credit monthly</em></p>
+                </div>
+                <button id="skip-api-key-btn" class="btn-secondary" style="margin-top: 1rem; width: 100%;">Skip for now (limited data)</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
