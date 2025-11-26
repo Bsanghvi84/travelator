@@ -8,14 +8,23 @@ class Travelator {
         this.cameraStream = null;
         this.nearbyPOIs = [];
         this.poisVisible = true;
+        this.map = null;
+        this.mapMarkers = [];
+        this.userMarker = null;
+        this.currentView = 'welcome'; // 'welcome', 'ar', 'map'
+        this.selectedPOI = null;
 
         // UI Elements
         this.elements = {
             welcomeScreen: document.getElementById('welcome-screen'),
             arScreen: document.getElementById('ar-screen'),
-            startBtn: document.getElementById('start-btn'),
+            mapScreen: document.getElementById('map-screen'),
+            startArBtn: document.getElementById('start-ar-btn'),
+            startMapBtn: document.getElementById('start-map-btn'),
             closeArBtn: document.getElementById('close-ar-btn'),
             togglePoisBtn: document.getElementById('toggle-pois-btn'),
+            toggleArBtn: document.getElementById('toggle-ar-btn'),
+            toggleMapBtn: document.getElementById('toggle-map-btn'),
             cameraFeed: document.getElementById('camera-feed'),
             arCanvas: document.getElementById('ar-canvas'),
             arOverlays: document.getElementById('ar-overlays'),
@@ -28,9 +37,14 @@ class Travelator {
             detailModal: document.getElementById('detail-modal'),
             detailContent: document.getElementById('detail-content'),
             closeModalBtn: document.getElementById('close-modal-btn'),
+            navigateBtn: document.getElementById('navigate-btn'),
             loadingOverlay: document.getElementById('loading-overlay'),
             loadingText: document.getElementById('loading-text'),
-            errorToast: document.getElementById('error-toast')
+            errorToast: document.getElementById('error-toast'),
+            mapContainer: document.getElementById('map-container'),
+            searchInput: document.getElementById('search-input'),
+            searchResults: document.getElementById('search-results'),
+            recenterBtn: document.getElementById('recenter-btn')
         };
 
         // Historical POI database (expandable with real API)
@@ -177,14 +191,37 @@ class Travelator {
     }
 
     setupEventListeners() {
-        // Start button
-        this.elements.startBtn.addEventListener('click', () => this.startARExperience());
+        // Start buttons
+        this.elements.startArBtn.addEventListener('click', () => this.startARExperience());
+        this.elements.startMapBtn.addEventListener('click', () => this.startMapExperience());
 
         // Close AR button
         this.elements.closeArBtn.addEventListener('click', () => this.closeARExperience());
 
         // Toggle POIs
         this.elements.togglePoisBtn.addEventListener('click', () => this.togglePOIs());
+
+        // View toggle buttons
+        this.elements.toggleArBtn.addEventListener('click', () => this.switchToAR());
+        this.elements.toggleMapBtn.addEventListener('click', () => this.switchToMap());
+
+        // Recenter map button
+        this.elements.recenterBtn.addEventListener('click', () => this.recenterMap());
+
+        // Search input
+        this.elements.searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
+        this.elements.searchInput.addEventListener('focus', () => {
+            if (this.elements.searchInput.value) {
+                this.handleSearch(this.elements.searchInput.value);
+            }
+        });
+
+        // Click outside search results to close
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.map-search')) {
+                this.elements.searchResults.classList.remove('active');
+            }
+        });
 
         // Bottom sheet interaction
         this.elements.poiSheet.addEventListener('click', (e) => {
@@ -200,6 +237,9 @@ class Travelator {
                 this.closeModal();
             }
         });
+
+        // Navigate button
+        this.elements.navigateBtn.addEventListener('click', () => this.navigateToPOI());
     }
 
     async requestLocationPermission() {
@@ -381,6 +421,7 @@ class Travelator {
             // Switch to AR screen
             this.elements.welcomeScreen.classList.remove('active');
             this.elements.arScreen.classList.add('active');
+            this.currentView = 'ar';
 
             // Setup AR canvas
             this.setupARCanvas();
@@ -515,6 +556,8 @@ class Travelator {
     }
 
     showPOIDetail(poi) {
+        this.selectedPOI = poi; // Save for navigation
+
         document.getElementById('detail-image').src = poi.image;
         document.getElementById('detail-name').textContent = poi.name;
         document.getElementById('detail-distance').textContent = `📍 ${this.formatDistance(poi.distance)} away`;
@@ -557,9 +600,248 @@ class Travelator {
             this.elements.errorToast.classList.remove('active');
         }, 5000);
     }
+
+    // Map functionality
+    startMapExperience() {
+        this.showLoading('Loading map...');
+
+        // Switch to map screen
+        this.elements.welcomeScreen.classList.remove('active');
+        this.elements.mapScreen.classList.add('active');
+        this.currentView = 'map';
+
+        // Initialize map if not already initialized
+        if (!this.map) {
+            this.initMap();
+        }
+
+        this.hideLoading();
+    }
+
+    initMap() {
+        // Default to New York if location not available yet
+        const defaultLat = this.userLocation ? this.userLocation.lat : 40.7128;
+        const defaultLon = this.userLocation ? this.userLocation.lon : -74.0060;
+
+        // Initialize Leaflet map
+        this.map = L.map('map-container', {
+            zoomControl: true
+        }).setView([defaultLat, defaultLon], 13);
+
+        // Add tile layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(this.map);
+
+        // Add user location marker
+        if (this.userLocation) {
+            const userIcon = L.divIcon({
+                className: 'user-location-marker',
+                html: '<div style="background: #6366f1; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            this.userMarker = L.marker([this.userLocation.lat, this.userLocation.lon], {
+                icon: userIcon
+            }).addTo(this.map);
+
+            this.userMarker.bindPopup('<strong>📍 You are here</strong>').openPopup();
+        }
+
+        // Add POI markers
+        this.updateMapMarkers();
+
+        // Fix map rendering issue
+        setTimeout(() => {
+            this.map.invalidateSize();
+        }, 100);
+    }
+
+    updateMapMarkers() {
+        if (!this.map) return;
+
+        // Clear existing markers
+        this.mapMarkers.forEach(marker => this.map.removeLayer(marker));
+        this.mapMarkers = [];
+
+        // Add markers for each POI
+        this.nearbyPOIs.forEach(poi => {
+            const markerIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); border: 2px solid white;">
+                    <span style="transform: rotate(45deg); font-size: 16px;">📍</span>
+                </div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 30],
+                popupAnchor: [0, -30]
+            });
+
+            const marker = L.marker([poi.lat, poi.lon], {
+                icon: markerIcon
+            }).addTo(this.map);
+
+            // Create popup content
+            const popupContent = `
+                <div class="map-popup">
+                    <div class="map-popup-title">${poi.name}</div>
+                    <div class="map-popup-meta">
+                        <span>📍 ${this.formatDistance(poi.distance)}</span>
+                        <span>🏛️ ${poi.type}</span>
+                    </div>
+                    <div class="map-popup-description">${poi.description}</div>
+                    <div class="map-popup-actions">
+                        <button class="btn-popup-primary" onclick="app.showPOIDetailFromMap(${poi.id})">
+                            📖 Learn More
+                        </button>
+                        <button class="btn-popup-secondary" onclick="app.navigateToPOIById(${poi.id})">
+                            🧭 Navigate
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            marker.bindPopup(popupContent, {
+                maxWidth: 300,
+                className: 'custom-popup'
+            });
+
+            this.mapMarkers.push(marker);
+        });
+    }
+
+    showPOIDetailFromMap(poiId) {
+        const poi = this.nearbyPOIs.find(p => p.id === poiId);
+        if (poi) {
+            this.showPOIDetail(poi);
+        }
+    }
+
+    navigateToPOIById(poiId) {
+        const poi = this.nearbyPOIs.find(p => p.id === poiId);
+        if (poi) {
+            this.selectedPOI = poi;
+            this.navigateToPOI();
+        }
+    }
+
+    switchToAR() {
+        if (this.currentView === 'ar') return;
+
+        this.elements.mapScreen.classList.remove('active');
+        this.elements.toggleMapBtn.classList.remove('active');
+        this.elements.toggleArBtn.classList.add('active');
+
+        this.startARExperience();
+    }
+
+    switchToMap() {
+        if (this.currentView === 'map') return;
+
+        // Stop camera if active
+        if (this.cameraStream) {
+            this.cameraStream.getTracks().forEach(track => track.stop());
+            this.cameraStream = null;
+        }
+
+        this.elements.arScreen.classList.remove('active');
+        this.elements.toggleArBtn.classList.remove('active');
+        this.elements.toggleMapBtn.classList.add('active');
+
+        this.elements.mapScreen.classList.add('active');
+        this.currentView = 'map';
+
+        // Initialize map if needed
+        if (!this.map) {
+            this.initMap();
+        } else {
+            this.map.invalidateSize();
+            this.recenterMap();
+        }
+    }
+
+    recenterMap() {
+        if (!this.map || !this.userLocation) return;
+
+        this.map.setView([this.userLocation.lat, this.userLocation.lon], 13);
+
+        // Update user marker position
+        if (this.userMarker) {
+            this.userMarker.setLatLng([this.userLocation.lat, this.userLocation.lon]);
+        }
+    }
+
+    handleSearch(query) {
+        if (!query || query.trim().length < 2) {
+            this.elements.searchResults.classList.remove('active');
+            return;
+        }
+
+        const searchTerm = query.toLowerCase();
+        const results = this.nearbyPOIs.filter(poi =>
+            poi.name.toLowerCase().includes(searchTerm) ||
+            poi.type.toLowerCase().includes(searchTerm) ||
+            poi.description.toLowerCase().includes(searchTerm)
+        ).slice(0, 5); // Limit to 5 results
+
+        if (results.length === 0) {
+            this.elements.searchResults.innerHTML = '<div class="search-result-item">No places found</div>';
+            this.elements.searchResults.classList.add('active');
+            return;
+        }
+
+        this.elements.searchResults.innerHTML = results.map(poi => `
+            <div class="search-result-item" data-poi-id="${poi.id}">
+                <div class="search-result-name">${poi.name}</div>
+                <div class="search-result-meta">
+                    <span>📍 ${this.formatDistance(poi.distance)}</span>
+                    <span>🏛️ ${poi.type}</span>
+                </div>
+            </div>
+        `).join('');
+
+        // Add click handlers
+        this.elements.searchResults.querySelectorAll('.search-result-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const poiId = parseInt(item.dataset.poiId);
+                const poi = this.nearbyPOIs.find(p => p.id === poiId);
+                if (poi) {
+                    // Zoom to POI on map
+                    if (this.map) {
+                        this.map.setView([poi.lat, poi.lon], 15);
+                        // Find and open the marker popup
+                        this.mapMarkers.forEach(marker => {
+                            if (marker.getLatLng().lat === poi.lat && marker.getLatLng().lng === poi.lon) {
+                                marker.openPopup();
+                            }
+                        });
+                    }
+                    this.elements.searchResults.classList.remove('active');
+                    this.elements.searchInput.value = '';
+                }
+            });
+        });
+
+        this.elements.searchResults.classList.add('active');
+    }
+
+    navigateToPOI() {
+        const poi = this.selectedPOI;
+        if (!poi || !this.userLocation) {
+            this.showError('Unable to get directions');
+            return;
+        }
+
+        // Open Google Maps with directions
+        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${this.userLocation.lat},${this.userLocation.lon}&destination=${poi.lat},${poi.lon}&travelmode=walking`;
+
+        window.open(googleMapsUrl, '_blank');
+    }
 }
 
 // Initialize app when DOM is loaded
+let app; // Global reference for popup callbacks
 document.addEventListener('DOMContentLoaded', () => {
-    new Travelator();
+    app = new Travelator();
 });

@@ -6,6 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <title>Travelator - AR Location History</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -28,11 +29,17 @@
                 <div class="welcome-content">
                     <div class="logo-large">🗺️</div>
                     <h2>Welcome to Travelator</h2>
-                    <p>Point your camera at landmarks and discover their fascinating history</p>
-                    <button id="start-btn" class="btn-primary">
-                        <span class="btn-icon">📸</span>
-                        Start Exploring
-                    </button>
+                    <p>Explore landmarks through AR camera view or discover places on an interactive map</p>
+                    <div class="welcome-buttons">
+                        <button id="start-ar-btn" class="btn-primary">
+                            <span class="btn-icon">📸</span>
+                            AR View
+                        </button>
+                        <button id="start-map-btn" class="btn-primary">
+                            <span class="btn-icon">🗺️</span>
+                            Map View
+                        </button>
+                    </div>
                     <div class="features">
                         <div class="feature">
                             <span class="feature-icon">📍</span>
@@ -41,6 +48,18 @@
                         <div class="feature">
                             <span class="feature-icon">📷</span>
                             <p>AR camera view</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">🗺️</span>
+                            <p>Interactive map</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">🔍</span>
+                            <p>Search places</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">🧭</span>
+                            <p>Navigation</p>
                         </div>
                         <div class="feature">
                             <span class="feature-icon">📚</span>
@@ -90,6 +109,34 @@
                 </div>
             </div>
 
+            <!-- Map Screen -->
+            <div id="map-screen" class="screen">
+                <div id="map-container"></div>
+
+                <!-- Search Bar -->
+                <div class="map-search">
+                    <input type="text" id="search-input" placeholder="🔍 Search for places..." />
+                    <div id="search-results" class="search-results"></div>
+                </div>
+
+                <!-- View Toggle -->
+                <div class="view-toggle">
+                    <button id="toggle-ar-btn" class="btn-toggle">
+                        <span>📸</span> AR View
+                    </button>
+                    <button id="toggle-map-btn" class="btn-toggle active">
+                        <span>🗺️</span> Map View
+                    </button>
+                </div>
+
+                <!-- Map Controls -->
+                <div class="map-controls">
+                    <button id="recenter-btn" class="btn-secondary">
+                        <span>📍</span> My Location
+                    </button>
+                </div>
+            </div>
+
             <!-- Location Detail Modal -->
             <div id="detail-modal" class="modal">
                 <div class="modal-content">
@@ -103,6 +150,9 @@
                         </div>
                         <div id="detail-description"></div>
                         <div id="detail-history"></div>
+                        <button id="navigate-btn" class="btn-primary" style="width: 100%; margin-top: 1rem;">
+                            <span>🧭</span> Get Directions
+                        </button>
                     </div>
                 </div>
             </div>
@@ -118,6 +168,7 @@
         <div id="error-toast" class="toast"></div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
