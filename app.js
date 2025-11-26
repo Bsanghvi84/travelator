@@ -305,40 +305,150 @@ class Travelator {
         }
     }
 
-    findNearbyPOIs() {
+    async findNearbyPOIs() {
         if (!this.userLocation) return;
 
-        // Calculate distances and filter POIs within reasonable range
-        this.nearbyPOIs = this.poiDatabase.map(poi => {
-            // For generic POIs (id >= 100), position them near user
-            if (poi.id >= 100) {
-                const offset = (poi.id - 100) * 0.01;
-                poi.lat = this.userLocation.lat + offset;
-                poi.lon = this.userLocation.lon + offset * 0.8;
-            }
+        // Show loading
+        this.showLoading('Finding nearby places...');
 
-            const distance = this.calculateDistance(
-                this.userLocation.lat,
-                this.userLocation.lon,
-                poi.lat,
-                poi.lon
-            );
+        try {
+            // Fetch real nearby places from Overpass API
+            const realPlaces = await this.fetchNearbyPlaces();
 
-            return {
-                ...poi,
-                distance: distance,
-                bearing: this.calculateBearing(
+            // Combine famous landmarks with real nearby places
+            const allPOIs = [...this.poiDatabase.filter(poi => poi.id < 100), ...realPlaces];
+
+            // Calculate distances and filter POIs within reasonable range
+            this.nearbyPOIs = allPOIs.map(poi => {
+                const distance = this.calculateDistance(
                     this.userLocation.lat,
                     this.userLocation.lon,
                     poi.lat,
                     poi.lon
-                )
-            };
-        })
-        .filter(poi => poi.distance < 5000) // Within 5000km for demo
-        .sort((a, b) => a.distance - b.distance);
+                );
 
-        this.updatePOIList();
+                return {
+                    ...poi,
+                    distance: distance,
+                    bearing: this.calculateBearing(
+                        this.userLocation.lat,
+                        this.userLocation.lon,
+                        poi.lat,
+                        poi.lon
+                    )
+                };
+            })
+            .filter(poi => poi.distance < 100) // Within 100km for real places
+            .sort((a, b) => a.distance - b.distance)
+            .slice(0, 50); // Limit to 50 places
+
+            this.updatePOIList();
+
+            // Update map markers if map is initialized
+            if (this.map) {
+                this.updateMapMarkers();
+            }
+        } catch (error) {
+            console.error('Error fetching nearby places:', error);
+            this.showError('Could not load nearby places. Using default locations.');
+
+            // Fallback to famous landmarks only
+            this.nearbyPOIs = this.poiDatabase.filter(poi => poi.id < 100).map(poi => {
+                const distance = this.calculateDistance(
+                    this.userLocation.lat,
+                    this.userLocation.lon,
+                    poi.lat,
+                    poi.lon
+                );
+
+                return {
+                    ...poi,
+                    distance: distance,
+                    bearing: this.calculateBearing(
+                        this.userLocation.lat,
+                        this.userLocation.lon,
+                        poi.lat,
+                        poi.lon
+                    )
+                };
+            }).sort((a, b) => a.distance - b.distance);
+
+            this.updatePOIList();
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async fetchNearbyPlaces() {
+        const radius = 5000; // 5km radius
+        const lat = this.userLocation.lat;
+        const lon = this.userLocation.lon;
+
+        // Overpass API query for various POI types
+        const query = `
+            [out:json][timeout:25];
+            (
+                node["tourism"~"attraction|museum|monument|viewpoint|artwork"](around:${radius},${lat},${lon});
+                node["historic"~"monument|memorial|castle|ruins|archaeological_site"](around:${radius},${lat},${lon});
+                node["amenity"~"theatre|cinema|library|community_centre|place_of_worship"](around:${radius},${lat},${lon});
+                way["tourism"~"attraction|museum|monument|viewpoint|artwork"](around:${radius},${lat},${lon});
+                way["historic"~"monument|memorial|castle|ruins|archaeological_site"](around:${radius},${lat},${lon});
+                way["amenity"~"theatre|cinema|library|community_centre|place_of_worship"](around:${radius},${lat},${lon});
+            );
+            out center 100;
+        `;
+
+        const url = 'https://overpass-api.de/api/interpreter';
+
+        const response = await fetch(url, {
+            method: 'POST',
+            body: query,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch places');
+        }
+
+        const data = await response.json();
+
+        // Convert Overpass data to our POI format
+        return data.elements.map((element, index) => {
+            const poiLat = element.lat || element.center?.lat;
+            const poiLon = element.lon || element.center?.lon;
+
+            if (!poiLat || !poiLon) return null;
+
+            const tags = element.tags || {};
+            const name = tags.name || tags['name:en'] || 'Unnamed Place';
+
+            // Determine type
+            let type = 'Point of Interest';
+            if (tags.tourism) type = this.formatType(tags.tourism);
+            else if (tags.historic) type = this.formatType(tags.historic);
+            else if (tags.amenity) type = this.formatType(tags.amenity);
+
+            return {
+                id: 1000 + index,
+                name: name,
+                type: type,
+                lat: poiLat,
+                lon: poiLon,
+                description: tags.description || `A ${type.toLowerCase()} in your area`,
+                history: tags['description:history'] || tags.wikipedia ||
+                        `${name} is a local ${type.toLowerCase()}. Visit to learn more about its history and significance.`,
+                image: tags.image || tags['image:url'] || 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80',
+                source: 'openstreetmap'
+            };
+        }).filter(poi => poi !== null);
+    }
+
+    formatType(type) {
+        return type.split('_').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
     }
 
     calculateDistance(lat1, lon1, lat2, lon2) {
@@ -730,9 +840,6 @@ class Travelator {
         if (this.currentView === 'ar') return;
 
         this.elements.mapScreen.classList.remove('active');
-        this.elements.toggleMapBtn.classList.remove('active');
-        this.elements.toggleArBtn.classList.add('active');
-
         this.startARExperience();
     }
 
@@ -746,9 +853,6 @@ class Travelator {
         }
 
         this.elements.arScreen.classList.remove('active');
-        this.elements.toggleArBtn.classList.remove('active');
-        this.elements.toggleMapBtn.classList.add('active');
-
         this.elements.mapScreen.classList.add('active');
         this.currentView = 'map';
 
